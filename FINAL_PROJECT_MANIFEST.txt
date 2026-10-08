@@ -1,0 +1,24 @@
+AI-POWERED BANKING CUSTOMER SUPPORT
+FINAL PROJECT MANIFEST
+======================================================================
+
+This folder is a clean copy of the final project.
+Original project files were NOT deleted or moved.
+
+FINAL MODEL:
+DistilBERT - dataset/checkpoints_step3_exp2/best_model
+
+FINAL OFFICIAL TEST RESULTS:
+Accuracy: 88.67%
+Weighted F1: 88.16%
+Official test queries: 3,079
+Number of classes: 77
+
+ML BASELINE:
+TF-IDF + Logistic Regression
+Accuracy: 87.79%
+Weighted F1: 87.87%
+
+TRANSFORMER IMPROVEMENT:
+Accuracy improvement: +0.88 percentage points
+Weighted F1 improvement: +0.28 percentage points

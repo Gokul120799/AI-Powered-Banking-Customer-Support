@@ -1,0 +1,284 @@
+============================================================
+STEP 4 — FINAL APPLICATION TEST
+AI-POWERED BANKING CUSTOMER SUPPORT
+============================================================
+
+PURPOSE
+-------
+Run the final Streamlit application and verify the main
+customer-support features before project submission.
+
+IMPORTANT
+---------
+- Do NOT retrain the model.
+- Do NOT modify the official test dataset.
+- Do NOT change the final best_model.
+- This is only a final application verification.
+- Keep the original project and previous files unchanged.
+
+
+------------------------------------------------------------
+1. OPEN THE FINAL PROJECT FOLDER
+------------------------------------------------------------
+
+Project folder:
+
+C:\Users\Gokul\OneDrive\Desktop\AI-Powered Banking Customer Support\FINAL_PROJECT\AI-Powered Banking Customer Support
+
+
+------------------------------------------------------------
+2. ACTIVATE THE VIRTUAL ENVIRONMENT
+------------------------------------------------------------
+
+Run:
+
+.\.venv\Scripts\Activate.ps1
+
+You should see:
+
+(.venv)
+
+at the beginning of the PowerShell prompt.
+
+
+------------------------------------------------------------
+3. START THE STREAMLIT APPLICATION
+------------------------------------------------------------
+
+Run:
+
+streamlit run app.py
+
+The browser should open the Streamlit application.
+
+If the browser does not open automatically, copy the
+Local URL shown in PowerShell and open it in your browser.
+
+Example:
+
+http://localhost:8501
+
+
+------------------------------------------------------------
+4. TEST QUERY #1 — HIGH CONFIDENCE
+------------------------------------------------------------
+
+Enter:
+
+I don't recognize a direct debit payment from my account
+
+Check that the application displays:
+
+[ ] Predicted intent
+[ ] Confidence score
+[ ] Priority
+[ ] Risk decision
+[ ] Escalation decision
+[ ] AI response
+[ ] Top-3 predictions
+[ ] Support summary
+[ ] Safety information
+
+Expected general behavior:
+
+- High confidence
+- Automated response
+- No unnecessary escalation
+- Controlled banking response
+
+Take a screenshot for project evidence.
+
+
+------------------------------------------------------------
+5. TEST QUERY #2 — LOW CONFIDENCE
+------------------------------------------------------------
+
+Enter:
+
+account locked
+
+Check that the application displays:
+
+[ ] Low confidence
+[ ] Human escalation
+[ ] Conservative/safe response
+[ ] Risk information
+[ ] Support summary
+
+Expected general behavior:
+
+- Low confidence
+- HUMAN_ESCALATION
+- Safe response instead of blindly answering
+
+Take a screenshot for project evidence.
+
+
+------------------------------------------------------------
+6. TEST QUERY #3 — AMBIGUOUS / SAFETY CASE
+------------------------------------------------------------
+
+Enter:
+
+issue with debit card
+
+Check that the application displays:
+
+[ ] Intent prediction
+[ ] Confidence
+[ ] Risk detection
+[ ] Verification/escalation decision
+[ ] Safe response
+
+Expected general behavior:
+
+- Risk/safety detection should be triggered
+- The system should avoid blindly treating the query as
+  an unrelated direct-debit problem
+- Verification should be requested when appropriate
+
+Take a screenshot for project evidence.
+
+
+------------------------------------------------------------
+7. TEST QUERY #4 — SHORT QUERY
+------------------------------------------------------------
+
+Enter:
+
+card damaged
+
+Check that the application displays:
+
+[ ] Confidence
+[ ] Risk flags
+[ ] Escalation decision
+[ ] Safe response
+
+Expected general behavior:
+
+- Low/uncertain confidence may occur
+- Human escalation is acceptable
+- Conservative response is expected
+
+Take a screenshot for project evidence.
+
+
+------------------------------------------------------------
+8. TEST QUERY #5 — NORMAL BANKING QUERY
+------------------------------------------------------------
+
+Enter:
+
+How can I transfer money to another bank account?
+
+Check that the application displays:
+
+[ ] Predicted intent
+[ ] Confidence
+[ ] Priority
+[ ] AI response
+[ ] Escalation decision
+[ ] Top-3 predictions
+[ ] Support summary
+
+Take a screenshot for project evidence.
+
+
+------------------------------------------------------------
+9. CHECK MODEL ANALYTICS
+------------------------------------------------------------
+
+Open the:
+
+Model Analytics
+
+tab.
+
+Verify that the application displays:
+
+DistilBERT Accuracy:
+88.67%
+
+DistilBERT Weighted F1:
+88.16%
+
+ML Baseline Accuracy:
+87.79%
+
+ML Baseline Weighted F1:
+87.87%
+
+Accuracy Improvement:
++0.88 percentage points
+
+Also verify the confidence distribution and
+error-analysis information.
+
+Take a screenshot of the analytics page.
+
+
+------------------------------------------------------------
+10. FINAL APPLICATION CHECKLIST
+------------------------------------------------------------
+
+[ ] Streamlit application starts successfully
+[ ] Main page loads without errors
+[ ] Support Assistant tab works
+[ ] Model Analytics tab works
+[ ] Query input works
+[ ] Intent prediction appears
+[ ] Confidence appears
+[ ] Priority appears
+[ ] Risk detection appears
+[ ] Escalation decision appears
+[ ] AI response appears
+[ ] Top-3 predictions appear
+[ ] Support summary appears
+[ ] Safety information appears
+[ ] Analytics metrics appear
+[ ] No Python error is displayed
+[ ] No model-loading error is displayed
+
+
+------------------------------------------------------------
+11. AFTER TESTING
+------------------------------------------------------------
+
+If all important checks pass:
+
+FINAL APPLICATION STATUS: READY FOR SUBMISSION
+
+Do NOT retrain the model after this test.
+
+Do NOT modify the official test dataset.
+
+Keep screenshots as project evidence.
+
+Recommended screenshot evidence:
+
+01_main_application.png
+02_high_confidence.png
+03_low_confidence_escalation.png
+04_safety_verification.png
+05_short_query_escalation.png
+06_normal_banking_query.png
+07_model_analytics.png
+
+
+------------------------------------------------------------
+12. IF AN ERROR OCCURS
+------------------------------------------------------------
+
+DO NOT change multiple files at once.
+
+Copy the complete error message from PowerShell/browser
+and provide it to the project guide.
+
+We will diagnose the exact cause first and then make the
+smallest required fix.
+
+
+============================================================
+END OF STEP 4 — FINAL APPLICATION TEST
+============================================================
