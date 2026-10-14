@@ -69,6 +69,30 @@ MULTI_ISSUE_MARKERS = {
 }
 
 
+def detect_card_security_risk(query: str) -> bool:
+    """Detect lost, stolen, or potentially compromised cards."""
+    q = " ".join(str(query).lower().split())
+
+    security_phrases = (
+        "lost card",
+        "lost my card",
+        "lost my debit card",
+        "lost my atm card",
+        "atm card is missed",
+        "atm card is missing",
+        "stolen card",
+        "stolen my card",
+        "someone may be using it",
+        "someone is using my card",
+        "card compromised",
+        "unauthorized card transaction",
+        "unauthorised card transaction",
+        "suspicious transaction",
+    )
+
+    return any(phrase in q for phrase in security_phrases)
+
+
 # ------------------------------------------------------------
 # Known semantic safety guard
 # ------------------------------------------------------------
@@ -234,6 +258,18 @@ def assess_query_risk(
             "The query may contain more than one distinct issue or request."
         )
 
+    
+    # 7. Card security takes precedence over model confidence.
+    card_security_risk = detect_card_security_risk(query)
+
+    if card_security_risk:
+        flags.append("POSSIBLE_CARD_SECURITY_RISK")
+        reasons.append(
+            "Possible lost, stolen, or compromised card. "
+            "Immediate official-channel security handling is required."
+        )
+
+
     # 7. Known semantic safety guard
     semantic_reason = semantic_safety_guard(query, top1_category)
     if semantic_reason:
@@ -242,13 +278,15 @@ def assess_query_risk(
 
     # --------------------------------------------------------
     # Final decision
-    # --------------------------------------------------------
-    # Conservative policy:
-    # LOW confidence -> human escalation.
-    # Semantic mismatch / close predictions / multiple issues ->
-    # customer verification.
-    # Otherwise high-confidence clear prediction -> automation.
-    if "LOW_CONFIDENCE" in flags:
+    
+    # Security must take precedence over classifier confidence.
+    if "POSSIBLE_CARD_SECURITY_RISK" in flags:
+        risk_level = "HIGH"
+        decision = "HUMAN_ESCALATION"
+        escalate = True
+        verification_required = False
+
+    elif "LOW_CONFIDENCE" in flags:
         risk_level = "HIGH"
         decision = "HUMAN_ESCALATION"
         escalate = True
@@ -285,26 +323,21 @@ def assess_query_risk(
         escalate = False
         verification_required = True
 
+    
     return {
         "query": query,
-        "predicted_category": top1_category,
-        "top1_confidence": round(top1_confidence, 6),
-        "top2_category": top2_category,
-        "top2_confidence": round(top2_confidence, 6),
-        "top3_category": top3_category,
-        "top3_confidence": (
-            round(float(top3_confidence), 6)
-            if top3_confidence is not None
-            else None
-        ),
-        "top2_margin": round(margin, 6),
-        "word_count": word_count,
         "risk_level": risk_level,
         "decision": decision,
         "escalate": escalate,
         "verification_required": verification_required,
         "risk_flags": flags,
-        "risk_reasons": reasons,
+        "reasons": reasons,
+        "top1_category": top1_category,
+        "top1_confidence": top1_confidence,
+        "top2_category": top2_category,
+        "top2_confidence": top2_confidence,
+        "margin": margin,
+        "word_count": word_count,
     }
 
 

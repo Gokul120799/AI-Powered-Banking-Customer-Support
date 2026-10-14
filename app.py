@@ -236,6 +236,102 @@ st.markdown(
         font-size: 0.85rem;
         padding-top: 1.5rem;
     }
+
+    
+/* Readability fix: keep existing layout and backgrounds */
+.section-title {
+    color: #172554 !important;
+}
+
+.stMarkdown p,
+.stMarkdown li,
+.stMarkdown label,
+.stMarkdown span {
+    color: #24324b;
+}
+
+/* Streamlit metric labels and values */
+[data-testid="stMetricLabel"] {
+    color: #334155 !important;
+}
+
+[data-testid="stMetricValue"] {
+    color: #172554 !important;
+}
+
+/* Improve text inside alert and information boxes */
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] div {
+    color: #24324b !important;
+}
+
+/* Improve table text */
+[data-testid="stTable"] th,
+[data-testid="stTable"] td {
+    color: #24324b !important;
+}
+
+/* Improve support summary and other content cards */
+div[data-testid="stVerticalBlock"] p {
+    color: #24324b;
+}
+
+.query-card {
+    background: #ffffff;
+    color: #172554 !important;
+    border: 1px solid #bfdbfe;
+    border-radius: 16px;
+    padding: 18px 22px;
+    box-shadow: 0 8px 20px rgba(30, 64, 175, 0.08);
+}
+
+.query-card p,
+.query-card strong {
+    color: #172554 !important;
+    opacity: 1 !important;
+}
+
+
+/* Fix Streamlit tab text visibility */
+.stTabs [data-baseweb="tab"] {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    border-radius: 8px 8px 0 0;
+}
+
+.stTabs [data-baseweb="tab"] p,
+.stTabs [data-baseweb="tab"] span {
+    color: #1e293b !important;
+    opacity: 1 !important;
+}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+    background-color: #ffffff !important;
+    border-bottom: 3px solid #ef4444 !important;
+}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"] p,
+.stTabs [data-baseweb="tab"][aria-selected="true"] span {
+    color: #1d4ed8 !important;
+    font-weight: 700 !important;
+}
+
+
+/* Fix risk explanation text contrast */
+.risk-card,
+.risk-card strong,
+.risk-card p,
+.risk-card span {
+    color: #7c2d12 !important;
+    opacity: 1 !important;
+}
+
+.query-card,
+.query-card strong {
+    color: #172554 !important;
+    opacity: 1 !important;
+}
+
     </style>
     """,
     unsafe_allow_html=True,
@@ -459,6 +555,7 @@ def assess_risk(query, result):
 
     if risk is not None:
         candidate_names = [
+            "assess_query_risk",  # Actual public API in src/08b_risk_detection.py
             "assess_risk",
             "analyze_risk",
             "evaluate_risk",
@@ -487,6 +584,14 @@ def assess_risk(query, result):
                     "confidence": top1,
                     "top1_confidence": top1,
                     "top2_confidence": top2,
+                    "top3_category": (
+                        result.get("top_predictions", [{}])[2].get("category")
+                        if len(result.get("top_predictions", [])) >= 3 else None
+                    ),
+                    "top3_confidence": (
+                        result.get("top_predictions", [{}])[2].get("confidence", 0.0)
+                        if len(result.get("top_predictions", [])) >= 3 else None
+                    ),
                     "top1": top1,
                     "top2": top2,
                     "top_predictions": result.get("top_predictions", []),
@@ -570,11 +675,140 @@ def normalize_risk_result(risk_result, result):
     return output
 
 
+def is_card_security_query(query):
+    q = " ".join(str(query).lower().split())
+
+    security_phrases = (
+        "lost card",
+        "lost my card",
+        "lost my debit card",
+        "lost my atm card",
+        "atm card is missed",
+        "atm card is missing",
+        "stolen card",
+        "stolen my card",
+        "someone may be using it",
+        "someone is using my card",
+        "card compromised",
+        "unauthorized card transaction",
+        "unauthorised card transaction",
+        "suspicious transaction",
+    )
+
+    return any(phrase in q for phrase in security_phrases)
+
+
+def is_general_balance_query(query):
+    """Allow only general how-to balance questions; not transaction disputes."""
+    q = " ".join(str(query).lower().split())
+    balance_terms = ("account balance", "bank balance", "available balance", "current balance")
+    question_terms = (
+        "how can i", "how do i", "how to", "where can i",
+        "how do we", "can i check", "check my", "view my", "see my",
+        "check account", "balance inquiry", "balance enquiry",
+    )
+    risky_terms = (
+        "transfer", "not updated", "not showing", "missing", "incorrect",
+        "wrong balance", "unauthorized", "unauthorised", "fraud",
+        "transaction", "money disappeared", "deducted",
+    )
+    return (
+        any(term in q for term in balance_terms)
+        and any(term in q for term in question_terms)
+        and not any(term in q for term in risky_terms)
+    )
+
+
+def is_otp_security_query(query):
+    q = " ".join(str(query).lower().split())
+    has_otp = any(term in q for term in ("otp", "one-time password", "one time password", "verification code"))
+    sharing = any(term in q for term in ("share", "tell", "give", "send", "provide", "reveal", "someone asks", "anyone asks"))
+    asking_safety = any(term in q for term in ("should i", "can i", "is it safe", "asked me", "asking me", "share my"))
+    return has_otp and (sharing or asking_safety)
+
+
+def is_unauthorized_transaction_query(query):
+    q = " ".join(str(query).lower().split())
+    transaction_terms = ("transaction", "payment", "charge", "withdrawal", "debit", "purchase")
+    unauthorized_terms = (
+        "i did not make", "i didn't make", "i did not authorize",
+        "i didn't authorize", "not mine", "don't recognize",
+        "do not recognize", "unauthorized", "unauthorised",
+        "someone else", "fraudulent", "suspicious",
+    )
+    return any(term in q for term in transaction_terms) and any(term in q for term in unauthorized_terms)
+
+
+def apply_query_specific_risk_policy(query, risk_result):
+    """Apply deterministic rules for clear routine questions and security risks."""
+    output = dict(risk_result or {})
+    flags = list(output.get("risk_flags", []))
+    reasons = list(output.get("risk_reasons", []))
+
+    if is_general_balance_query(query):
+        output.update({
+            "risk_level": "LOW",
+            "decision": "AUTOMATED_RESPONSE",
+            "escalate": False,
+            "verification_required": False,
+        })
+        flags.append("GENERAL_BALANCE_GUIDANCE")
+        reasons.append(
+            "General how-to balance question; provide only generic guidance and no account-specific information."
+        )
+    elif is_card_security_query(query) or is_unauthorized_transaction_query(query) or is_otp_security_query(query):
+        output.update({
+            "risk_level": "HIGH",
+            "decision": "HUMAN_ESCALATION",
+            "escalate": True,
+            "verification_required": False,
+        })
+        flags.append("SECURITY_ESCALATION")
+        reasons.append("Potential card, transaction, or OTP security risk requires official-bank guidance and human review.")
+
+    output["risk_flags"] = list(dict.fromkeys(flags))
+    output["risk_reasons"] = list(dict.fromkeys(reasons))
+    return output
+
+
 def build_safe_response(result, risk_result):
-    """
-    The risk layer is authoritative for whether the generated
-    response may be treated as automated.
-    """
+    query = result.get("query", "")
+
+    if is_card_security_query(query):
+        return (
+            "Your card may be lost or compromised. Please use your "
+            "bank's official app or contact its official support "
+            "number immediately to block or freeze the card. Do not "
+            "share your PIN, password, or OTP. A human support "
+            "specialist should review this case."
+        )
+
+    if is_otp_security_query(query):
+        return (
+            "Never share your OTP or verification code with anyone, "
+            "including someone claiming to be a bank employee. Your bank "
+            "should not ask you to disclose it. If you already shared it "
+            "or suspect fraud, contact your bank through its official app "
+            "or support number immediately. This case should receive human review."
+        )
+
+    if is_unauthorized_transaction_query(query):
+        return (
+            "This may be an unauthorized transaction. Contact your bank "
+            "immediately using its official app or support number to report "
+            "the transaction and secure your account or card. Do not share "
+            "your PIN, password, or OTP. A human support specialist should review this case."
+        )
+
+    if is_general_balance_query(query):
+        return (
+            "You can usually check your account balance in your bank's "
+            "official mobile app, internet banking website, ATM, or by "
+            "contacting the bank through an official channel. I cannot view "
+            "your actual account balance. Never share your PIN, password, or OTP."
+        )
+
+    # The risk layer remains authoritative for other queries.
     decision = risk_result["decision"]
 
     if decision == "HUMAN_ESCALATION":
@@ -727,6 +961,9 @@ with assistant_tab:
                 risk_result = normalize_risk_result(
                     assess_risk(query.strip(), result),
                     result,
+                )
+                risk_result = apply_query_specific_risk_policy(
+                    query.strip(), risk_result
                 )
             except Exception as e:
                 st.error("An error occurred while processing the query.")
